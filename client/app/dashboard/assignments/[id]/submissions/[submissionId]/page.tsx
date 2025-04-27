@@ -541,7 +541,7 @@ export default function SubmissionReviewPage({
                   const fileUrl = file.previewUrl.startsWith('http')
                     ? file.previewUrl
                     : `${process.env.NEXT_PUBLIC_API_BASE_URL}${file.previewUrl}`;
-                  console.log('fileUrl: ',fileUrl);
+                  // console.log('fileUrl: ',fileUrl);
                   const isImage = /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(fileUrl);
                   const isPDF = /\.pdf$/i.test(fileUrl);
 

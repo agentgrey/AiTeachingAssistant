@@ -190,13 +190,13 @@ export default function AssignmentDetailPage({ params }: { params: { id: string 
     setManualStudentName("")
   }
 
-  const addSubmission = async (submissionData: any) => {
+  const addSubmission = async (submissionData: FormData) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/assignment/${id}/submit`, {
         method: 'POST',
         body: submissionData,  
       });
-      console.log(response);
+      // console.log(response);
 
       toast({
         title: "Success",

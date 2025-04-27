@@ -44,7 +44,7 @@ export async function getRequest<T>(endpoint: string): Promise<T> {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
-    console.log('getReq-> res: ', res);
+    // console.log('getReq-> res: ', res);
 
     if (!res.ok) {
       const errorData = await res.json();
@@ -76,7 +76,7 @@ export async function patchRequest<T>(endpoint: string, body: any): Promise<T> {
       },
       body: JSON.stringify(body),
     });
-    console.log('patchReq-> res: ', res);
+    // console.log('patchReq-> res: ', res);
 
     if (!res.ok) {
       const errorData = await res.json();
