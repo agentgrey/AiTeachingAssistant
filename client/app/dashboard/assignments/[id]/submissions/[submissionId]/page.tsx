@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
+import { useParams } from 'next/navigation';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -25,6 +26,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { toast } from "@/components/ui/use-toast"
+import { getRequest } from '@/lib/api'
 
 // Types for our comments and highlights
 type InlineComment = {
@@ -56,24 +58,36 @@ export default function SubmissionReviewPage({
 }: {
   params: { id: string; submissionId: string }
 }) {
+  const {id, submissionId} = useParams()
+  const [fileContent, setFileContent] = useState<any>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchSubmission() {
+      try {
+        const res = await getRequest<{ files: { filePath: string; previewUrl: string }[] }>(`/assignment/${id}/submissions/${submissionId}`);
+        setFileContent(res.files);
+      } catch (error) {
+        console.error('Error fetching submission:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchSubmission();
+  }, [id, submissionId]);
+  
   // Mock data for the submission
   const submission = {
-    id: params.submissionId,
-    assignmentId: params.id,
+    id: submissionId,
+    assignmentId: id,
     assignmentTitle: "Essay on Climate Change",
     studentName: "John Doe",
     studentId: "S12345",
     submissionDate: "2023-12-10",
     status: "pending",
-    content: `Climate change is one of the most pressing issues of our time. The Earth's climate has changed throughout history. Just in the last 650,000 years, there have been seven cycles of glacial advance and retreat, with the abrupt end of the last ice age about 11,700 years ago marking the beginning of the modern climate era — and of human civilization. Most of these climate changes are attributed to very small variations in Earth's orbit that change the amount of solar energy our planet receives.
-
-The current warming trend is of particular significance because most of it is extremely likely (greater than 95% probability) to be the result of human activity since the mid-20th century and proceeding at a rate that is unprecedented over decades to millennia.
-
-Earth-orbiting satellites and other technological advances have enabled scientists to see the big picture, collecting many different types of information about our planet and its climate on a global scale. This body of data, collected over many years, reveals the signals of a changing climate.
-
-The heat-trapping nature of carbon dioxide and other gases was demonstrated in the mid-19th century. Their ability to affect the transfer of infrared energy through the atmosphere is the scientific basis of many instruments flown by NASA. There is no question that increased levels of greenhouse gases must cause the Earth to warm in response.
-
-Ice cores drawn from Greenland, Antarctica, and tropical mountain glaciers show that the Earth's climate responds to changes in greenhouse gas levels. Ancient evidence can also be found in tree rings, ocean sediments, coral reefs, and layers of sedimentary rocks. This ancient, or paleoclimate, evidence reveals that current warming is occurring roughly ten times faster than the average rate of ice-age-recovery warming.`,
+    content: '',
+    fileContent: fileContent,
     aiCheckerResults: {
       score: 92,
       confidence: "High",
@@ -326,120 +340,120 @@ Ice cores drawn from Greenland, Antarctica, and tropical mountain glaciers show 
   }
 
   // Render the content with highlights
-  const renderHighlightedContent = () => {
-    const content = submission.content
-    const result = []
-    const lastIndex = 0
+  // const renderHighlightedContent = () => {
+  //   const content = submission.content
+  //   const result = []
+  //   const lastIndex = 0
 
-    // Sort comments by startIndex
-    const sortedComments = [...inlineComments].sort((a, b) => a.startIndex - b.startIndex)
+  //   // Sort comments by startIndex
+  //   const sortedComments = [...inlineComments].sort((a, b) => a.startIndex - b.startIndex)
 
-    // Create an array to hold all segments (text and highlights)
-    const segments = []
+  //   // Create an array to hold all segments (text and highlights)
+  //   const segments = []
 
-    // Add the beginning of the text
-    if (sortedComments.length > 0 && sortedComments[0].startIndex > 0) {
-      segments.push({
-        type: "text",
-        content: content.substring(0, sortedComments[0].startIndex),
-      })
-    } else if (sortedComments.length === 0) {
-      segments.push({
-        type: "text",
-        content: content,
-      })
-    }
+  //   // Add the beginning of the text
+  //   if (sortedComments.length > 0 && sortedComments[0].startIndex > 0) {
+  //     segments.push({
+  //       type: "text",
+  //       content: content.substring(0, sortedComments[0].startIndex),
+  //     })
+  //   } else if (sortedComments.length === 0) {
+  //     segments.push({
+  //       type: "text",
+  //       content: content,
+  //     })
+  //   }
 
-    // Add all highlights and text between them
-    for (let i = 0; i < sortedComments.length; i++) {
-      const comment = sortedComments[i]
+  //   // Add all highlights and text between them
+  //   for (let i = 0; i < sortedComments.length; i++) {
+  //     const comment = sortedComments[i]
 
-      // Add the highlight
-      segments.push({
-        type: "highlight",
-        content: content.substring(comment.startIndex, comment.endIndex),
-        comment: comment,
-      })
+  //     // Add the highlight
+  //     segments.push({
+  //       type: "highlight",
+  //       content: content.substring(comment.startIndex, comment.endIndex),
+  //       comment: comment,
+  //     })
 
-      // Add text between this highlight and the next one (or the end)
-      const nextIndex = i < sortedComments.length - 1 ? sortedComments[i + 1].startIndex : content.length
-      if (comment.endIndex < nextIndex) {
-        segments.push({
-          type: "text",
-          content: content.substring(comment.endIndex, nextIndex),
-        })
-      }
-    }
+  //     // Add text between this highlight and the next one (or the end)
+  //     const nextIndex = i < sortedComments.length - 1 ? sortedComments[i + 1].startIndex : content.length
+  //     if (comment.endIndex < nextIndex) {
+  //       segments.push({
+  //         type: "text",
+  //         content: content.substring(comment.endIndex, nextIndex),
+  //       })
+  //     }
+  //   }
 
-    // Process segments into paragraphs
-    let currentParagraph = []
-    const paragraphs = []
+  //   // Process segments into paragraphs
+  //   let currentParagraph = []
+  //   const paragraphs = []
 
-    for (const segment of segments) {
-      if (segment.type === "text") {
-        // Split text by paragraphs
-        const paragraphTexts = segment.content.split("\n\n")
+  //   for (const segment of segments) {
+  //     if (segment.type === "text") {
+  //       // Split text by paragraphs
+  //       const paragraphTexts = segment.content.split("\n\n")
 
-        // Add first part to current paragraph
-        if (paragraphTexts.length > 0) {
-          currentParagraph.push({
-            type: "text",
-            content: paragraphTexts[0],
-          })
-        }
+  //       // Add first part to current paragraph
+  //       if (paragraphTexts.length > 0) {
+  //         currentParagraph.push({
+  //           type: "text",
+  //           content: paragraphTexts[0],
+  //         })
+  //       }
 
-        // For each additional paragraph, create a new paragraph
-        for (let i = 1; i < paragraphTexts.length; i++) {
-          // Save current paragraph
-          if (currentParagraph.length > 0) {
-            paragraphs.push([...currentParagraph])
-            currentParagraph = []
-          }
+  //       // For each additional paragraph, create a new paragraph
+  //       for (let i = 1; i < paragraphTexts.length; i++) {
+  //         // Save current paragraph
+  //         if (currentParagraph.length > 0) {
+  //           paragraphs.push([...currentParagraph])
+  //           currentParagraph = []
+  //         }
 
-          // Start new paragraph
-          currentParagraph.push({
-            type: "text",
-            content: paragraphTexts[i],
-          })
-        }
-      } else {
-        // Add highlight to current paragraph
-        currentParagraph.push(segment)
-      }
-    }
+  //         // Start new paragraph
+  //         currentParagraph.push({
+  //           type: "text",
+  //           content: paragraphTexts[i],
+  //         })
+  //       }
+  //     } else {
+  //       // Add highlight to current paragraph
+  //       currentParagraph.push(segment)
+  //     }
+  //   }
 
-    // Add the last paragraph if it exists
-    if (currentParagraph.length > 0) {
-      paragraphs.push(currentParagraph)
-    }
+  //   // Add the last paragraph if it exists
+  //   if (currentParagraph.length > 0) {
+  //     paragraphs.push(currentParagraph)
+  //   }
 
-    // Render paragraphs
-    return paragraphs.map((paragraph, pIndex) => (
-      <p key={`p-${pIndex}`} className="mb-4">
-        {paragraph.map((segment, sIndex) => {
-          if (segment.type === "text") {
-            return <span key={`s-${pIndex}-${sIndex}`}>{segment.content}</span>
-          } else {
-            const comment = segment.comment
-            const isActive = comment.id === activeCommentId
+  //   // Render paragraphs
+  //   return paragraphs.map((paragraph, pIndex) => (
+  //     <p key={`p-${pIndex}`} className="mb-4">
+  //       {paragraph.map((segment, sIndex) => {
+  //         if (segment.type === "text") {
+  //           return <span key={`s-${pIndex}-${sIndex}`}>{segment.content}</span>
+  //         } else {
+  //           const comment: any = segment.comment
+  //           const isActive = comment.id === activeCommentId
 
-            return (
-              <span
-                key={`h-${comment.id}`}
-                className={`relative inline-block cursor-pointer group ${comment.color} px-0.5 rounded transition-all duration-200 ${isActive ? "ring-2 ring-primary" : ""}`}
-                onClick={() => scrollToComment(comment.id)}
-              >
-                {segment.content}
-                <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                  <MessageSquare className="w-3 h-3" />
-                </span>
-              </span>
-            )
-          }
-        })}
-      </p>
-    ))
-  }
+  //           return (
+  //             <span
+  //               key={`h-${comment.id}`}
+  //               className={`relative inline-block cursor-pointer group ${comment.color} px-0.5 rounded transition-all duration-200 ${isActive ? "ring-2 ring-primary" : ""}`}
+  //               onClick={() => scrollToComment(comment.id)}
+  //             >
+  //               {segment.content}
+  //               <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+  //                 <MessageSquare className="w-3 h-3" />
+  //               </span>
+  //             </span>
+  //           )
+  //         }
+  //       })}
+  //     </p>
+  //   ))
+  // }
 
   // Save all changes
   const saveChanges = () => {
@@ -459,13 +473,14 @@ Ice cores drawn from Greenland, Antarctica, and tropical mountain glaciers show 
       minute: "numeric",
     }).format(date)
   }
-
+  
+  if (loading) return <div>Loading...</div>;
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" asChild>
-            <Link href={`/dashboard/assignments/${params.id}`}>
+            <Link href={`/dashboard/assignments/${id}`}>
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
@@ -511,7 +526,7 @@ Ice cores drawn from Greenland, Antarctica, and tropical mountain glaciers show 
                   {isCommentMode ? "Exit Comment Mode" : "Add Comments"}
                 </Button>
                 <Button variant="outline" size="icon" title="Share" asChild>
-                  <Link href={`/dashboard/assignments/${params.id}/submissions/${params.submissionId}/share`}>
+                  <Link href={`/dashboard/assignments/${id}/submissions/${submissionId}/share`}>
                     <Share2 className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -521,18 +536,49 @@ Ice cores drawn from Greenland, Antarctica, and tropical mountain glaciers show 
               </div>
             </CardHeader>
             <CardContent className="relative">
-              {isCommentMode && (
+              <div className="flex flex-wrap justify-center gap-4 p-4 w-full">
+                {fileContent.map((file:any, index:number) => {
+                  const fileUrl = file.previewUrl.startsWith('http')
+                    ? file.previewUrl
+                    : `${process.env.NEXT_PUBLIC_API_BASE_URL}${file.previewUrl}`;
+                  console.log('fileUrl: ',fileUrl);
+                  const isImage = /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(fileUrl);
+                  const isPDF = /\.pdf$/i.test(fileUrl);
+
+                  return (
+                    <div key={index} className="w-full">
+                      {isImage && (
+                        <img src={fileUrl} alt={`Submission ${index}`} className="w-full h-auto max-h-[500px] object-contain rounded-lg shadow"  />
+                      )}
+                      {isPDF && (
+                        <iframe
+                          src={fileUrl}
+                          title={`PDF Viewer ${index}`}
+                          className="w-full h-[80vh] rounded-lg shadow"
+                        />
+                      )}
+                      {!isImage && !isPDF && (
+                        <div className="text-center text-gray-600">
+                          Cannot display this file type.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* {isCommentMode && (
                 <div className="absolute top-0 left-0 right-0 bg-muted/30 p-2 rounded-t-md text-sm text-center">
                   Select text to add comments. Click on highlighted text to view comments.
                 </div>
-              )}
-              <div
+              )} */}
+              {/* <div
                 ref={contentRef}
                 className={`prose max-w-none ${isCommentMode ? "pt-8 cursor-text" : ""}`}
                 onMouseUp={handleTextSelection}
               >
                 {renderHighlightedContent()}
-              </div>
+              </div> */}
             </CardContent>
           </Card>
 

@@ -186,8 +186,7 @@ export default function SignupPage() {
       });
 
       console.log("Signup successful"); 
-      localStorage.setItem("token", data.token);
-      router.push("/dashboard/assignments");
+      router.push("/login");
     } catch (error: any) {
       console.error("Error during signup:", error.message)
     }

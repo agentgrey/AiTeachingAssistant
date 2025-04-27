@@ -1,5 +1,10 @@
 const mongoose = require('mongoose');
 
+const submissionSchema = new mongoose.Schema({
+  studentName: { type: String, default: null },
+  file: { type: []}
+}, { _id: true });
+
 const assignmentSchema = new mongoose.Schema({
   title: { type: String, required: true },
   course: { type: String, required: true },
@@ -18,8 +23,12 @@ const assignmentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true
-  }
-}, {timestamps: true});
+  },
+  dueDate: { type: Date, required: false },       
+  totalPoints: { type: Number, required: false },   
+  submissions: { type: [submissionSchema], default: [] },
+}, { timestamps: true });
+
 
 const Assignment = mongoose.model('Assignment', assignmentSchema);
 

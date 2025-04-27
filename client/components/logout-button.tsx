@@ -10,6 +10,7 @@ export function LogoutButton() {
   const handleLogout = () => {
     // In a real app, you would call your logout API here
     // For now, we'll just redirect to the login page
+    localStorage.clear();
     router.push("/login")
   }
 

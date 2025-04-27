@@ -596,6 +596,7 @@ export default function CreateAssignmentPage() {
         selectedType,
         learningObjectives,
         generatedContent,
+        dueDate
       });
 
       toast({
