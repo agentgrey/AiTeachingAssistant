@@ -9,7 +9,7 @@
 
 ---
 ## 🧠 Example Usage
-1. Login
+1. Login (email: u@ser1.com, password: 123)
 2. Click "Create Assignment"
 3. Fill in assignment title, objectives
 4. Let AI auto-generate everything
